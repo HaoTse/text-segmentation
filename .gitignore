@@ -99,3 +99,14 @@ ENV/
 
 # mypy
 .mypy_cache/
+
+# vscode setup
+.vscode/
+
+# data/
+data/
+zh_data/
+en_data/
+
+# jieba dictionary
+src/

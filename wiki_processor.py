@@ -11,6 +11,7 @@ import wiki_utils
 import text_manipulation
 import wiki_thresholds
 import json
+from opencc import OpenCC
 
 
 logger = utils.setup_logger(__name__, 'processor_log.log', True )
@@ -25,6 +26,8 @@ wikipedia_namespaces = ['Category', 'File', 'Ru', 'Wikipedia', 'Talk', 'User', '
 
 disambigutaiton_pattern = '(disambiguation)'
 
+# converter
+openCC = OpenCC('s2t')
 
 global num_sentneces_for_avg
 global sum_sentneces_for_avg
@@ -143,7 +146,7 @@ def process_section(section, id):
             error_message = "list percentage in section is too high: " + str(lists_perentage)
 
     section_text =  ''.join(section_sentences)
-    if len(re.findall('[a-zA-Z]', section_text)) < wiki_thresholds.min_section_char_count:
+    if len(section_text) < wiki_thresholds.min_section_char_count:
         valid_section = False
         error_message = "char count in section is too low"
 
@@ -221,6 +224,8 @@ def process_content(content, id):
     valid_section_count = 0
     for i in range(len(sections_with_headers)):
         section = sections_with_headers[i]
+        # convert to Traditional Chinese
+        section = openCC.convert(section)
         if wiki_utils.is_seperator_line(section):
             article_lines.append(section)
         else:

@@ -1,41 +1,26 @@
-import nltk.data
-import exceptions
+# coding=utf-8
+import re
+import os
+import jieba
 import numpy as np
-from nltk.tokenize import RegexpTokenizer
 import wiki_utils
 import wiki_thresholds
 import utils
 
-sentence_tokenizer = None
-words_tokenizer = None
-missing_stop_words = set(['of', 'a', 'and', 'to'])
+missing_stop_words = set([u'的', u'個', u'了'])
+# sentence split token
+punkt_token = re.compile(ur'[。，；]|[!?！？]+')
+# load jieba dictionary
+if os.path.isfile('src/dict_t.txt'):
+    jieba.load_userdict('src/dict_t.txt')
+
 logger = utils.setup_logger(__name__, 'text_manipulation.log', True )
 
+def chinese_punkt(text):
+    return re.split(punkt_token, text)
 
-def get_punkt():
-    global sentence_tokenizer
-    if sentence_tokenizer:
-        return sentence_tokenizer
-
-    try:
-        tokenizer = nltk.data.load('tokenizers/punkt/english.pickle')
-    except exceptions.LookupError:
-        nltk.download('punkt')
-        tokenizer = nltk.data.load('tokenizers/punkt/english.pickle')
-
-    sentence_tokenizer = tokenizer
-    return sentence_tokenizer
-
-def get_words_tokenizer():
-    global words_tokenizer
-
-    if words_tokenizer:
-        return words_tokenizer
-
-    words_tokenizer = RegexpTokenizer(r'\w+')
-    return words_tokenizer
-
-
+def chinese_words_tokenizer(text):
+    return jieba.lcut(text)
 
 def split_sentence_with_list(sentence):
 
@@ -79,7 +64,8 @@ def split_long_sentences_with_backslash_n(max_words_in_sentence,sentences, doc_i
     return new_sentences
 
 def split_sentences(text, doc_id):
-    sentences = get_punkt().tokenize(text)
+    # sentences = get_punkt().tokenize(text)
+    sentences = chinese_punkt(text)
     senteces_list_fix = []
     for sentence in sentences:
         seplited_list_sentence = split_sentence_with_list(sentence)
@@ -104,8 +90,9 @@ def extract_sentence_words(sentence, remove_missing_emb_words = False,remove_spe
         for token in wiki_utils.get_special_tokens():
             # Can't do on sentence words because tokenizer delete '***' of tokens.
             sentence = sentence.replace(token, "")
-    tokenizer = get_words_tokenizer()
-    sentence_words = tokenizer.tokenize(sentence)
+    # tokenizer = get_words_tokenizer()
+    # sentence_words = tokenizer.tokenize(sentence)
+    sentence_words = chinese_words_tokenizer(sentence)
     if remove_missing_emb_words:
         sentence_words = [w for w in sentence_words if w not in missing_stop_words]
 
